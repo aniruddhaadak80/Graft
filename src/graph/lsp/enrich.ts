@@ -135,17 +135,17 @@ export async function enrichWithLsp(
 
   const withPos = sources.flatMap((source) => {
     const pos = namePos(source);
-    return pos ? [{ source, pos }] : [];
+    return pos ? [{ path: source.path, pos }] : [];
   });
   const sample = readinessSample(withPos);
   if (sample.length) {
     const first = sample[0];
-    if (!(await client.waitUntilReady(join(root, first.source.path), first.pos))) {
+    if (!(await client.waitUntilReady(join(root, first.path), first.pos))) {
       await client.dispose();
       return { added: 0, queried: 0, server: server.command };
     }
-    await waitForReadiness(sample.map(({ source, pos }) => async () => {
-      const abs = join(root, source.path);
+    await waitForReadiness(sample.map(({ path, pos }) => async () => {
+      const abs = join(root, path);
       client.didOpen(abs);
       return (await client.prepareCallHierarchy(abs, pos)).length > 0;
     }));
